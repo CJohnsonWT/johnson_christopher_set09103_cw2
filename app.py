@@ -14,7 +14,9 @@ site_path = os.path.realpath(os.path.dirname(__file__))
 
 def check_auth(username, password):
 	for item in mongo.db.users.find( {"user": username} ):
-		if item['password'] == password:
+		valid = item['password']
+		valid = valid.encode('utf-8')
+		if valid == bcrypt.hashpw(password.encode('utf-8'), valid):
 			return True
 	return False	
 
@@ -156,7 +158,8 @@ def signup():
 	if request.method == 'POST':
 		newuser = request.form['createusername']
 		newpass = request.form['createpassword']
-		favourites = []	
+		favourites = []
+		newpass = bcrypt.hashpw(newpass.encode('utf-8'), bcrypt.gensalt())	
 		mongo.db.users.insert({"user": newuser, "password": newpass, "favourites": favourites})
 		return redirect(url_for('login'))
 	return render_template('signup.html')
